@@ -177,26 +177,26 @@ function showCommune(name,lat,lon,forceIn){
 }
 
 async function getTravelTime(lat,lon,name){
-  var loadEl=document.getElementById('rc-loading');
-  var timeEl=document.getElementById('rc-time-val');
-  if(!ORS_KEY){loadEl.style.display='none';timeEl.textContent='';if(searchMarker)searchMarker.setPopupContent('<b>'+name+'</b>');return;}
-  try{
-    var r=await fetch('https://api.openrouteservice.org/v2/directions/driving-car',{
-      method:'POST',
-      headers:{'Authorization':ORS_KEY,'Content-Type':'application/json','Accept':'application/json'},
-      body:JSON.stringify({coordinates:[[K_LON,K_LAT],[lon,lat]]})
-    });
-    if(!r.ok){var e=await r.text();throw new Error('HTTP '+r.status+': '+e);}
-    var data=await r.json();
-    var secs=data.routes[0].summary.duration;
-    timeEl.textContent=fmtDur(secs);
-    if(searchMarker)searchMarker.setPopupContent('<b>'+name+'</b><br>'+fmtDur(secs));
-    if(activeEl){var d=activeEl.querySelector('.c-dur');if(d){d.textContent=fmtDur(secs);d.classList.add('v');}}
-  }catch(e){
-    console.error('ORS:',e.message);
-    timeEl.textContent=e.message;
+  var loadEl = document.getElementById('rc-loading');
+  var timeEl = document.getElementById('rc-time-val');
+  if(!ORS_KEY){ loadEl.style.display='none'; return; }
+  var KEY = ORS_KEY.trim();
+  var body = JSON.stringify({coordinates:[[K_LON,K_LAT],[lon,lat]]});
+  var headers = {'Content-Type':'application/json','Accept':'application/json,application/geo+json','Authorization':KEY};
+  try {
+    var r = await fetch('https://api.openrouteservice.org/v2/directions/driving-car', {method:'POST', headers:headers, body:body});
+    var txt = await r.text();
+    if(!r.ok) { timeEl.textContent = 'Erreur '+r.status; loadEl.style.display='none'; return; }
+    var data = JSON.parse(txt);
+    var secs = data.features[0].properties.summary.duration;
+    var dur = fmtDur(secs);
+    timeEl.textContent = dur;
+    if(searchMarker) searchMarker.setPopupContent('<b>'+name+'</b><br>'+dur);
+    if(activeEl){ var d=activeEl.querySelector('.c-dur'); if(d){d.textContent=dur;d.classList.add('v');} }
+  } catch(e) {
+    timeEl.textContent = 'Erreur: '+e.message;
   }
-  loadEl.style.display='none';
+  loadEl.style.display = 'none';
 }
 
 function closeResult(){document.getElementById('resultCard').classList.remove('v');if(searchMarker)map.removeLayer(searchMarker);if(routeLine)map.removeLayer(routeLine);searchMarker=null;routeLine=null;}
