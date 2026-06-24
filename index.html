@@ -69,16 +69,6 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sa
 .pulse{width:14px;height:14px;background:#6366f1;border-radius:50%;border:3px solid white;animation:pulse 2s ease-out infinite}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(99,102,241,.5)}70%{box-shadow:0 0 0 12px rgba(99,102,241,0)}100%{box-shadow:0 0 0 0 rgba(99,102,241,0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
-.key-btn{position:absolute;bottom:16px;right:16px;z-index:1000;background:white;border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px;font-size:12px;color:#64748b;cursor:pointer}
-.key-btn:hover{background:#f8fafc;color:#334155}
-.key-modal{position:absolute;bottom:52px;right:16px;z-index:1001;background:white;border:1px solid #e2e8f0;border-radius:10px;padding:14px;box-shadow:0 4px 20px rgba(0,0,0,.12);display:none;width:280px}
-.key-modal.v{display:block}
-.key-modal p{font-size:12px;color:#64748b;margin-bottom:8px}
-.key-modal input{width:100%;padding:7px 10px;border:1px solid #e2e8f0;border-radius:7px;font-size:12px;font-family:monospace;outline:none;margin-bottom:8px}
-.key-modal input:focus{border-color:#a5b4fc}
-.key-modal button{width:100%;padding:7px;background:#6366f1;color:white;border:none;border-radius:7px;font-size:12px;cursor:pointer}
-.key-modal button:hover{background:#4f46e5}
-.key-status{font-size:11px;color:#16a34a;margin-top:6px;display:none}
 .leaflet-control-zoom{border:none!important;box-shadow:0 2px 8px rgba(0,0,0,.12)!important;border-radius:8px!important;overflow:hidden}
 .leaflet-control-zoom a{background:white!important;color:#475569!important;border:none!important;border-bottom:1px solid #f1f5f9!important;width:28px!important;height:28px!important;line-height:28px!important}
 .leaflet-control-zoom a:hover{color:#6366f1!important;background:#f5f3ff!important}
@@ -114,13 +104,6 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sa
       <span class="rc-loading" id="rc-loading">...</span>
     </div>
 
-    <button class="key-btn" onclick="toggleKeyModal()" id="keyBtn">Clé API</button>
-    <div class="key-modal" id="keyModal">
-      <p>Clé OpenRouteService pour les durées de trajet.<br>Stockée uniquement dans votre navigateur.</p>
-      <input type="text" id="keyInput" placeholder="5b3ce3597851110001cf6248...">
-      <button onclick="saveKey()">Enregistrer</button>
-      <div class="key-status" id="keyStatus">Clé enregistrée ✓</div>
-    </div>
   </div>
   <div id="sidebar">
     <div class="sb-head">
@@ -134,6 +117,12 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sa
       </div>
     </div>
     <div class="sb-divider"></div>
+    <div style="padding:10px 14px;border-bottom:1px solid #f1f5f9">
+      <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px">Clé ORS (durée trajet)</div>
+      <input type="text" id="keyInput" placeholder="5b3ce3597851..." autocomplete="off" spellcheck="false"
+        style="width:100%;padding:6px 10px;border:1px solid #e2e8f0;border-radius:7px;font-size:12px;font-family:monospace;outline:none;color:#334155"
+        oninput="ORS_KEY=this.value.trim();localStorage.setItem('ors_key',this.value.trim())">
+    </div>
     <div class="sb-list" id="sb-list"></div>
   </div>
 </div>
@@ -268,27 +257,8 @@ inp.addEventListener('input',function(e){var v=e.target.value.trim();document.ge
 inp.addEventListener('keydown',function(e){if(e.key==='Escape')clearSearch();});
 document.addEventListener('click',function(e){if(!e.target.closest('.search-wrap'))closeSug();});
 
-function toggleKeyModal(){
-  var m=document.getElementById('keyModal');
-  m.classList.toggle('v');
-  if(m.classList.contains('v')){
-    document.getElementById('keyInput').value=ORS_KEY;
-    document.getElementById('keyStatus').style.display='none';
-  }
-}
-function saveKey(){
-  var k=document.getElementById('keyInput').value.trim();
-  ORS_KEY=k;
-  localStorage.setItem('ors_key',k);
-  document.getElementById('keyStatus').style.display='block';
-  document.getElementById('keyBtn').textContent=k?'Clé API ✓':'Clé API';
-  setTimeout(function(){document.getElementById('keyModal').classList.remove('v');},800);
-}
-document.addEventListener('click',function(e){
-  if(!e.target.closest('.key-btn')&&!e.target.closest('.key-modal'))
-    document.getElementById('keyModal').classList.remove('v');
-});
-if(ORS_KEY) document.getElementById('keyBtn').textContent='Clé API ✓';
+var _k=localStorage.getItem('ors_key')||'';
+if(_k){ORS_KEY=_k;document.getElementById('keyInput').value=_k;}
 renderList(COMMUNES);
 </script>
 </body>
