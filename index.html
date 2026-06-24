@@ -177,15 +177,26 @@ function showCommune(name,lat,lon,forceIn){
 }
 
 async function getTravelTime(lat,lon,name){
-  if(!ORS_KEY){document.getElementById('rc-loading').style.display='none';document.getElementById('rc-time-val').textContent='';if(searchMarker)searchMarker.setPopupContent('<b>'+name+'</b>');return;}
+  var loadEl=document.getElementById('rc-loading');
+  var timeEl=document.getElementById('rc-time-val');
+  if(!ORS_KEY){loadEl.style.display='none';timeEl.textContent='';if(searchMarker)searchMarker.setPopupContent('<b>'+name+'</b>');return;}
   try{
-    var r=await fetch('https://api.openrouteservice.org/v2/directions/driving-car?api_key='+ORS_KEY+'&start='+K_LON+','+K_LAT+'&end='+lon+','+lat);
+    var r=await fetch('https://api.openrouteservice.org/v2/directions/driving-car',{
+      method:'POST',
+      headers:{'Authorization':ORS_KEY,'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({coordinates:[[K_LON,K_LAT],[lon,lat]]})
+    });
+    if(!r.ok){var e=await r.text();throw new Error('HTTP '+r.status+': '+e);}
     var data=await r.json();
-    var secs=data.features[0].properties.segments[0].duration;
-    document.getElementById('rc-time-val').textContent=fmtDur(secs); if(searchMarker) searchMarker.setPopupContent('<b>'+name+'</b><br>'+fmtDur(secs));
+    var secs=data.routes[0].summary.duration;
+    timeEl.textContent=fmtDur(secs);
+    if(searchMarker)searchMarker.setPopupContent('<b>'+name+'</b><br>'+fmtDur(secs));
     if(activeEl){var d=activeEl.querySelector('.c-dur');if(d){d.textContent=fmtDur(secs);d.classList.add('v');}}
-  }catch(e){document.getElementById('rc-time-val').textContent='Erreur API';}
-  document.getElementById('rc-loading').style.display='none';
+  }catch(e){
+    console.error('ORS:',e.message);
+    timeEl.textContent=e.message;
+  }
+  loadEl.style.display='none';
 }
 
 function closeResult(){document.getElementById('resultCard').classList.remove('v');if(searchMarker)map.removeLayer(searchMarker);if(routeLine)map.removeLayer(routeLine);searchMarker=null;routeLine=null;}
