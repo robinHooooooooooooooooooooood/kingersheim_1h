@@ -27,20 +27,19 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sa
 .sug-item:hover{background:#f0f9ff}
 .sug-name{font-weight:600}
 .sug-sub{font-size:11px;color:#94a3b8;margin-top:1px}
-.result-card{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);z-index:1000;background:white;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.15);padding:16px 20px;width:min(400px,82%);display:none}
-.result-card.v{display:block;animation:fadeup .2s ease}
-@keyframes fadeup{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-.rc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.rc-title{font-size:16px;font-weight:700;color:#0f172a}
-.rc-close{background:none;border:none;cursor:pointer;color:#94a3b8;font-size:16px;line-height:1}
-.rc-rows{display:flex;flex-direction:column;gap:8px}
-.rc-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:#f8fafc}
-.rc-row-icon{font-size:18px;flex-shrink:0}
-.rc-row-label{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.05em}
-.rc-row-val{font-size:15px;font-weight:700;color:#0f172a;margin-top:1px}
-.rc-row.green{background:#f0fdf4}.rc-row.red{background:#fef2f2}
-.rc-row.green .rc-row-val{color:#15803d}.rc-row.red .rc-row-val{color:#dc2626}
-.rc-loading{text-align:center;padding:6px 0;color:#94a3b8;font-size:13px;display:none}
+.result-card{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);z-index:1000;background:white;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;display:none;white-space:nowrap}
+.result-card.v{display:flex;align-items:center;gap:12px}
+.rc-header{display:none}
+.rc-rows{display:flex;align-items:center;gap:10px}
+.rc-row{display:contents}
+.rc-row-icon{display:none}
+.rc-row-label{display:none}
+.rc-row-val{font-size:13px;color:#334155}
+.rc-row.green .rc-row-val{color:#16a34a}
+.rc-row.red .rc-row-val{color:#dc2626}
+.rc-loading{font-size:13px;color:#94a3b8;display:none}
+.rc-title-inline{font-size:13px;font-weight:700;color:#0f172a}
+.rc-sep{color:#cbd5e1;font-size:13px}
 #sidebar{width:300px;flex-shrink:0;background:white;border-left:1px solid #e2e8f0;display:flex;flex-direction:column}
 .sb-head{padding:16px 16px 0;flex-shrink:0}
 .sb-head-top{display:flex;align-items:center;margin-bottom:12px}
@@ -95,25 +94,14 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sa
     </div>
     <div id="map"></div>
     <div class="result-card" id="resultCard">
-      <div class="rc-header">
-        <div class="rc-title" id="rc-title"></div>
-        <button class="rc-close" onclick="closeResult()">&#x2715;</button>
-      </div>
-      <div class="rc-loading" id="rc-loading">Calcul du trajet...</div>
-      <div class="rc-rows" id="rc-rows">
-        <div class="rc-row" id="rc-zone">
-          <div class="rc-row-icon" id="rc-zone-icon"></div>
-          <div><div class="rc-row-label">Zone isochrone</div><div class="rc-row-val" id="rc-zone-val"></div></div>
-        </div>
-        <div class="rc-row" id="rc-time">
-          <div class="rc-row-icon">&#x1F697;</div>
-          <div><div class="rc-row-label">Depuis Kingersheim</div><div class="rc-row-val" id="rc-time-val"></div></div>
-        </div>
-        <div class="rc-row">
-          <div class="rc-row-icon">&#x1F4CD;</div>
-          <div><div class="rc-row-label">Distance vol d'oiseau</div><div class="rc-row-val" id="rc-dist-val"></div></div>
-        </div>
-      </div>
+      <span class="rc-title-inline" id="rc-title"></span>
+      <span class="rc-sep">—</span>
+      <span class="rc-row-val" id="rc-zone-val"></span>
+      <span class="rc-sep">·</span>
+      <span class="rc-row-val" id="rc-time-val"></span>
+      <span class="rc-sep">·</span>
+      <span class="rc-row-val" id="rc-dist-val"></span>
+      <span class="rc-loading" id="rc-loading">...</span>
     </div>
   </div>
   <div id="sidebar">
@@ -148,7 +136,7 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r
 
 L.geoJSON(ISO, {style:{fillColor:'#6366f1',fillOpacity:.10,color:'#6366f1',weight:2,opacity:.5}}).addTo(map);
 L.geoJSON(COMMUNES_GEO, {
-  style: {fillColor:'transparent', fillOpacity:0, color:'#6366f1', weight:1, opacity:0.4}
+  style: {fillColor:'transparent', fillOpacity:0, color:'#334155', weight:1.2, opacity:0.6}
 }).addTo(map);
 
 var kIcon = L.divIcon({className:'',html:'<div class="pulse"></div>',iconSize:[14,14],iconAnchor:[7,7]});
@@ -159,10 +147,10 @@ function inZone(lon,lat){var c=ISO.features[0].geometry.coordinates;for(var p=0;
 function dist(lat1,lon1,lat2,lon2){var R=6371,dL=(lat2-lat1)*Math.PI/180,dO=(lon2-lon1)*Math.PI/180,a=Math.sin(dL/2)*Math.sin(dL/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dO/2)*Math.sin(dO/2);return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
 function fmtDur(s){var h=Math.floor(s/3600),m=Math.round((s%3600)/60);return h===0?m+' min':h+'h'+(m>0?(''+m).padStart(2,'0'):'00');}
 
-function showCommune(name,lat,lon){
+function showCommune(name,lat,lon,forceIn){
   if(searchMarker)map.removeLayer(searchMarker);
   if(routeLine)map.removeLayer(routeLine);
-  var isIn=inZone(lon,lat);
+  var isIn = forceIn !== undefined ? forceIn : inZone(lon,lat);
   var color=isIn?'#16a34a':'#dc2626';
   var ico=L.divIcon({className:'',html:'<div style="width:12px;height:12px;border-radius:50%;background:'+color+';border:2.5px solid white;box-shadow:0 2px 6px rgba(0,0,0,.3)"></div>',iconSize:[12,12],iconAnchor:[6,6]});
   searchMarker=L.marker([lat,lon],{icon:ico}).addTo(map);
@@ -171,8 +159,8 @@ function showCommune(name,lat,lon){
   var d=dist(K[0],K[1],lat,lon);
   document.getElementById('rc-title').textContent=name;
   document.getElementById('rc-zone-icon').textContent=isIn?'✅':'❌';
-  document.getElementById('rc-zone-val').textContent=isIn?'Dans la zone (moins de 1h)':'Hors zone (plus de 1h)';
-  document.getElementById('rc-zone').className='rc-row '+(isIn?'green':'red');
+  document.getElementById('rc-zone-val').style.color=isIn?'#16a34a':'#dc2626'; document.getElementById('rc-zone-val').textContent=isIn?'Dans la zone':'Hors zone';
+  
   document.getElementById('rc-dist-val').textContent=d.toFixed(1)+' km';
   document.getElementById('rc-time-val').textContent='...';
   document.getElementById('rc-loading').style.display='block';
@@ -217,7 +205,7 @@ function itemClick(el){
   var lon=parseFloat(el.getAttribute('data-lon'));
   document.getElementById('searchInput').value=name;
   document.getElementById('clearBtn').classList.add('v');
-  showCommune(name,lat,lon);
+  showCommune(name,lat,lon,true);
 }
 
 function highlightSidebar(name){
