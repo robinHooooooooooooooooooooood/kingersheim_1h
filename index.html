@@ -245,7 +245,10 @@ document.addEventListener('click',function(e){if(!e.target.closest('.search-wrap
 var ORS_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjM0YWQ4MmI2OWZjZTQ5MTM5YWE3N2YyZTZhMWE2NTNkIiwiaCI6Im11cm11cjY0In0=';
 
 async function getTravelTime(lat, lon, name) {
+  var dbg = document.getElementById('rc-time-val');
+  dbg.textContent = '1-appel lance';
   try {
+    dbg.textContent = '2-cle=' + ORS_KEY.substring(0,8);
     var resp = await fetch('https://api.openrouteservice.org/v2/directions/driving-car', {
       method: 'POST',
       headers: {
@@ -254,13 +257,15 @@ async function getTravelTime(lat, lon, name) {
       },
       body: JSON.stringify({ coordinates: [[K_LON, K_LAT], [lon, lat]] })
     });
+    dbg.textContent = '3-http=' + resp.status;
     var data = await resp.json();
+    dbg.textContent = '4-json=' + JSON.stringify(data).substring(0,60);
     var secs = data.features[0].properties.segments[0].duration;
     var txt = fmtDur(secs);
-    document.getElementById('rc-time-val').textContent = txt;
+    dbg.textContent = txt;
     if (searchMarker) searchMarker.setPopupContent('<b>' + name + '</b><br>' + txt);
   } catch(e) {
-    document.getElementById('rc-time-val').textContent = 'N/A';
+    dbg.textContent = 'ERR=' + e.message;
   }
 }
 renderList(COMMUNES);
