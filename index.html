@@ -160,7 +160,6 @@ function showCommune(name,lat,lon,forceIn){
   map.fitBounds([[Math.min(K[0],lat)-.05,Math.min(K[1],lon)-.05],[Math.max(K[0],lat)+.05,Math.max(K[1],lon)+.05]]);
   var d=dist(K[0],K[1],lat,lon);
   document.getElementById('rc-title').textContent=name;
-  document.getElementById('rc-zone-icon').textContent=isIn?'✅':'❌';
   document.getElementById('rc-zone-val').style.color=isIn?'#16a34a':'#dc2626'; document.getElementById('rc-zone-val').textContent=isIn?'Dans la zone':'Hors zone';
   
   document.getElementById('rc-dist-val').textContent=d.toFixed(1)+' km';
@@ -246,9 +245,7 @@ var ORS_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjM0YWQ4MmI2O
 
 async function getTravelTime(lat, lon, name) {
   var dbg = document.getElementById('rc-time-val');
-  dbg.textContent = '1-appel lance';
   try {
-    dbg.textContent = '2-cle=' + ORS_KEY.substring(0,8);
     var resp = await fetch('https://api.openrouteservice.org/v2/directions/driving-car', {
       method: 'POST',
       headers: {
@@ -257,15 +254,35 @@ async function getTravelTime(lat, lon, name) {
       },
       body: JSON.stringify({ coordinates: [[K_LON, K_LAT], [lon, lat]] })
     });
-    dbg.textContent = '3-http=' + resp.status;
+
+    if (!resp.ok) { dbg.textContent = 'HTTP ' + resp.status; return; }
+
     var data = await resp.json();
-    dbg.textContent = '4-json=' + JSON.stringify(data).substring(0,60);
-    var secs = data.features[0].properties.segments[0].duration;
+
+    // ORS renvoie soit summary.duration, soit segments[0].duration selon le format
+    var secs = null;
+    if (data.features && data.features[0]) {
+      var props = data.features[0].properties;
+      if (props.summary && props.summary.duration != null) secs = props.summary.duration;
+      else if (props.segments && props.segments[0]) secs = props.segments[0].duration;
+    } else if (data.routes && data.routes[0] && data.routes[0].summary) {
+      secs = data.routes[0].summary.duration;
+    }
+
+    if (secs == null) {
+      dbg.textContent = 'Format inconnu';
+      console.error('Reponse ORS:', JSON.stringify(data).substring(0,300));
+      return;
+    }
+
     var txt = fmtDur(secs);
     dbg.textContent = txt;
     if (searchMarker) searchMarker.setPopupContent('<b>' + name + '</b><br>' + txt);
-  } catch(e) {
-    dbg.textContent = 'ERR=' + e.message;
+    if (activeEl) { var d = activeEl.querySelector('.c-dur'); if (d) { d.textContent = txt; d.classList.add('v'); } }
+
+  } catch (err) {
+    dbg.textContent = 'ERR=' + err.message;
+    console.error('getTravelTime:', err);
   }
 }
 renderList(COMMUNES);
