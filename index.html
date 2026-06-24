@@ -153,7 +153,10 @@ function showCommune(name,lat,lon,forceIn){
   var isIn = forceIn !== undefined ? forceIn : inZone(lon,lat);
   var color=isIn?'#16a34a':'#dc2626';
   var ico=L.divIcon({className:'',html:'<div style="width:12px;height:12px;border-radius:50%;background:'+color+';border:2.5px solid white;box-shadow:0 2px 6px rgba(0,0,0,.3)"></div>',iconSize:[12,12],iconAnchor:[6,6]});
-  searchMarker=L.marker([lat,lon],{icon:ico}).addTo(map);
+  searchMarker = L.marker([lat,lon], {icon:ico})
+    .bindPopup('<strong>' + name + '</strong><br>calcul...')
+    .addTo(map)
+    .openPopup();
   routeLine=L.polyline([[K[0],K[1]],[lat,lon]],{color:'#6366f1',weight:2,opacity:.4,dashArray:'6,4'}).addTo(map);
   map.fitBounds([[Math.min(K[0],lat)-.05,Math.min(K[1],lon)-.05],[Math.max(K[0],lat)+.05,Math.max(K[1],lon)+.05]]);
   var d=dist(K[0],K[1],lat,lon);
@@ -163,6 +166,9 @@ function showCommune(name,lat,lon,forceIn){
   
   document.getElementById('rc-dist-val').textContent=d.toFixed(1)+' km';
   document.getElementById('rc-time-val').textContent='...';
+  if (searchMarker) {
+  searchMarker.setPopupContent('<strong>' + name + '</strong><br>' + fmtDur(secs));
+  }
   document.getElementById('rc-loading').style.display='block';
   document.getElementById('resultCard').classList.add('v');
   getTravelTime(lat,lon,name);
